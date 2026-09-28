@@ -43,7 +43,7 @@ Open the URL printed by Vite, normally `http://127.0.0.1:5173/`. The current res
 ```text
 .
 ├── .github/
-│   ├── workflows/pages.yml               # Validate PRs; publish dev to GitHub Pages
+│   ├── workflows/pages.yml               # Validate PRs; publish main to GitHub Pages
 │   └── PULL_REQUEST_TEMPLATE.md           # Review checklist
 ├── docs/
 │   ├── architecture.md                    # Module boundaries and search flow
@@ -104,7 +104,7 @@ The app sends the selected search point and radius to Overpass only when a searc
 
 ## Delivery
 
-The repository uses `main` and `dev`. Changes to `main` go through a pull request. GitHub Actions checks pull requests into both branches and publishes successful `dev` builds to [GitHub Pages](https://engasnm111.github.io/eat-a-rai-dee/). The Supabase GitHub integration manages future database migrations and functions separately; it does not publish the website.
+The repository uses `main` and `dev`. Changes to `main` go through a pull request. GitHub Actions checks pull requests into both branches and publishes successful `main` builds to [GitHub Pages](https://engasnm111.github.io/eat-a-rai-dee/). The Supabase GitHub integration manages future database migrations and functions separately; it does not publish the website.
 
 ## License and credits
 
