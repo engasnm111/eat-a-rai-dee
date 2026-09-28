@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 332 72" role="img" aria-labelledby="title">
+  <title id="title">eat a rai dee</title>
+  <rect x="2" y="4" width="64" height="64" rx="18" fill="#f9c846"/>
+  <path d="M14 35h40c-1 14-9 22-20 22S15 49 14 35Z" fill="#37253f"/>
+  <path d="M15 35h38" fill="none" stroke="#fffaf0" stroke-width="3" stroke-linecap="round"/>
+  <path d="M33 28c-1-5 7-6 7-12 0-4-3-6-7-6-3 0-6 2-7 5" fill="none" stroke="#37253f" stroke-width="4.5" stroke-linecap="round"/>
+  <circle cx="33" cy="31" r="2.5" fill="#37253f"/>
+  <path d="m45 21 3-5 3 5" fill="none" stroke="#ed5b42" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="80" y="42" fill="#37253f" font-family="Prompt, sans-serif" font-size="29" font-weight="700" letter-spacing="-1.4">eat a rai dee</text>
+  <text x="81" y="58" fill="#5f5364" font-family="Prompt, sans-serif" font-size="10" font-weight="600" letter-spacing="2.4">LUNCH DISCOVERY</text>
+</svg>
