@@ -4,6 +4,12 @@ A bilingual lunch finder built with React and TypeScript. Pick a location, searc
 
 ![eat a rai dee logo](public/logo.svg)
 
+## Preview
+
+![Restaurant results and map near the sample point in central Bangkok](docs/screenshots/home-desktop.png)
+
+The screenshot uses the sample point in central Bangkok. Restaurant data comes from OpenStreetMap and may change.
+
 ## Run locally
 
 Requires Node.js 22.12 or newer and npm.
@@ -35,12 +41,53 @@ Open the URL printed by Vite, normally `http://127.0.0.1:5173/`. The current res
 ## Project layout
 
 ```text
-src/app/                  App composition and translations
-src/components/ui/        Shared UI
-src/config/               Map and provider settings
-src/features/discovery/   Search, filters, map, and results
-src/lib/                  Shared HTTP boundary
-supabase/                 Local Supabase configuration; no database migration yet
+.
+├── .github/
+│   ├── workflows/pages.yml               # Validate PRs; publish main to GitHub Pages
+│   └── PULL_REQUEST_TEMPLATE.md           # Review checklist
+├── docs/
+│   ├── architecture.md                    # Module boundaries and search flow
+│   ├── supabase-setup.md                  # Dashboard and future Auth setup
+│   └── screenshots/home-desktop.png       # README preview
+├── public/
+│   ├── favicon.svg
+│   └── logo.svg
+├── src/
+│   ├── main.tsx                           # React entry point
+│   ├── styles.css                         # Global styles and layout
+│   ├── app/
+│   │   ├── App.tsx                        # Application composition
+│   │   └── i18n.ts                        # Thai and English translations
+│   ├── components/ui/
+│   │   ├── Brand.tsx                      # Shared branding
+│   │   └── LanguageSwitch.tsx             # Language control
+│   ├── config/map.ts                      # Map and provider settings
+│   ├── features/discovery/
+│   │   ├── index.ts                       # Public feature entry point
+│   │   ├── DiscoveryPage.tsx              # Search, results, and map composition
+│   │   ├── api/
+│   │   │   ├── overpass.ts                # Overpass request and OSM normalization
+│   │   │   └── overpass.test.ts           # API boundary tests
+│   │   ├── hooks/useDiscovery.ts          # Search state and request lifecycle
+│   │   ├── model/
+│   │   │   ├── types.ts                   # Place and filter types
+│   │   │   ├── quick-filter-catalog.ts    # Food category definitions
+│   │   │   ├── filter-restaurants.ts      # Distance and filter rules
+│   │   │   ├── filter-restaurants.test.ts # Filtering tests
+│   │   │   └── place-details.ts           # Addresses and external map links
+│   │   └── components/
+│   │       ├── SearchDialog.tsx           # Search form
+│   │       ├── QuickFilters.tsx           # Category shortcuts
+│   │       ├── ResultsPanel.tsx           # Sorted result list
+│   │       ├── RestaurantCard.tsx         # Individual result
+│   │       ├── PlaceMeta.tsx              # Place facts and availability
+│   │       ├── SelectedPlace.tsx          # Selected map place
+│   │       └── MapCanvas.tsx              # Leaflet map and pins
+│   └── lib/http.ts                        # Shared HTTP boundary
+├── supabase/config.toml                  # Local CLI config; no migrations yet
+├── index.html                            # Static HTML entry point and CSP
+├── vite.config.ts                        # Vite build and Pages base path
+└── package.json                          # Scripts and dependencies
 ```
 
 See [Architecture](docs/architecture.md) for the data flow and module boundaries. Read [Contributing](CONTRIBUTING.md) before opening a pull request.
@@ -57,7 +104,7 @@ The app sends the selected search point and radius to Overpass only when a searc
 
 ## Delivery
 
-The repository uses `main` and `dev`. Changes to `main` go through a pull request. CI/CD and GitHub Pages deployment are planned after manual acceptance; Vite already sets the `/eat-a-rai-dee/` base path for the intended Pages URL.
+The repository uses `main` and `dev`. Changes to `main` go through a pull request. GitHub Actions checks pull requests into both branches and publishes successful `main` builds to [GitHub Pages](https://engasnm111.github.io/eat-a-rai-dee/). The Supabase GitHub integration manages future database migrations and functions separately; it does not publish the website.
 
 ## License and credits
 
