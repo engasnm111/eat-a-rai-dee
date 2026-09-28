@@ -22,6 +22,7 @@ function place(overrides: Partial<Restaurant>): Restaurant {
 const criteria: SearchCriteria = {
   keyword: '',
   radiusMeters: 1000,
+  travelMode: 'driving',
   quickFilters: [],
   openNow: false,
   vegetarian: false,

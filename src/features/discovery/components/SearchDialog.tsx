@@ -11,8 +11,17 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitch } from '../../../components/ui/LanguageSwitch';
+import { AuthControl } from '../../auth/AuthControl';
+import type { AuthState } from '../../auth/useAuth';
 import type { LocationKind } from '../hooks/useDiscovery';
-import type { QuickFilterId, SearchCriteria } from '../model/types';
+import {
+  MAX_SEARCH_RADIUS_METERS,
+  MIN_SEARCH_RADIUS_METERS,
+  SEARCH_RADIUS_STEP_METERS,
+  type QuickFilterId,
+  type SearchCriteria,
+  type TravelMode,
+} from '../model/types';
 import { QuickFilters } from './QuickFilters';
 
 type AdvancedKey =
@@ -24,8 +33,15 @@ const advancedKeys: AdvancedKey[] = [
   'takeaway',
   'delivery',
 ];
+const travelModes: TravelMode[] = [
+  'driving',
+  'two-wheeler',
+  'bicycling',
+  'walking',
+];
 
 interface SearchDialogProps {
+  auth: AuthState;
   criteria: SearchCriteria;
   locationKind: LocationKind;
   locating: boolean;
@@ -38,6 +54,7 @@ interface SearchDialogProps {
 }
 
 export function SearchDialog({
+  auth,
   criteria,
   locationKind,
   locating,
@@ -100,6 +117,9 @@ export function SearchDialog({
       </div>
 
       <div className="search-dialog__content">
+        <div className="search-dialog__auth">
+          <AuthControl auth={auth} placement="dialog" />
+        </div>
         <div className="search-dialog__language">
           <LanguageSwitch />
         </div>
@@ -154,6 +174,26 @@ export function SearchDialog({
             onToggle={toggleFilter}
           />
 
+          <fieldset className="travel-modes">
+            <legend className="field-label">
+              {t('search.travelModeHeading')}
+            </legend>
+            <div className="travel-modes__options">
+              {travelModes.map((mode) => (
+                <label className="travel-mode-option" key={mode}>
+                  <input
+                    type="radio"
+                    name="travel-mode"
+                    value={mode}
+                    checked={criteria.travelMode === mode}
+                    onChange={() => onChange({ ...criteria, travelMode: mode })}
+                  />
+                  <span>{t(`search.travelMode.${mode}`)}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
           <div className="radius-heading">
             <label className="field-label" htmlFor="radius">
               {t('search.radiusHeading')}
@@ -166,13 +206,14 @@ export function SearchDialog({
             className="radius-slider"
             id="radius"
             type="range"
-            min="300"
-            max="5000"
-            step="100"
+            min={MIN_SEARCH_RADIUS_METERS}
+            max={MAX_SEARCH_RADIUS_METERS}
+            step={SEARCH_RADIUS_STEP_METERS}
             value={criteria.radiusMeters}
+            aria-describedby="radius-hint"
             style={
               {
-                '--range-progress': `${((criteria.radiusMeters - 300) / 4700) * 100}%`,
+                '--range-progress': `${((criteria.radiusMeters - MIN_SEARCH_RADIUS_METERS) / (MAX_SEARCH_RADIUS_METERS - MIN_SEARCH_RADIUS_METERS)) * 100}%`,
               } as React.CSSProperties
             }
             onChange={(event) =>
@@ -184,8 +225,11 @@ export function SearchDialog({
           />
           <div className="radius-scale" aria-hidden="true">
             <span>300 m</span>
-            <span>5 km</span>
+            <span>10 km</span>
           </div>
+          <p className="radius-hint" id="radius-hint">
+            {t('search.radiusHint')}
+          </p>
 
           <div className="section-label section-label--location">
             <span>{t('search.locationHeading')}</span>

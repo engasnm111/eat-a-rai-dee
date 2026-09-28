@@ -43,9 +43,16 @@ export interface RestaurantWithDistance extends Restaurant {
   distanceMeters: number;
 }
 
+export const MIN_SEARCH_RADIUS_METERS = 300;
+export const MAX_SEARCH_RADIUS_METERS = 10_000;
+export const SEARCH_RADIUS_STEP_METERS = 100;
+
+export type TravelMode = 'driving' | 'two-wheeler' | 'bicycling' | 'walking';
+
 export interface SearchCriteria {
   keyword: string;
   radiusMeters: number;
+  travelMode: TravelMode;
   quickFilters: QuickFilterId[];
   openNow: boolean;
   vegetarian: boolean;
@@ -56,7 +63,8 @@ export interface SearchCriteria {
 
 export const DEFAULT_CRITERIA: SearchCriteria = {
   keyword: '',
-  radiusMeters: 1200,
+  radiusMeters: 5000,
+  travelMode: 'driving',
   quickFilters: [],
   openNow: false,
   vegetarian: false,

@@ -6,6 +6,10 @@ import type {
   Restaurant,
   RestaurantCategory,
 } from '../model/types';
+import {
+  MAX_SEARCH_RADIUS_METERS,
+  MIN_SEARCH_RADIUS_METERS,
+} from '../model/types';
 
 const responseSchema = z.object({ elements: z.array(z.unknown()) });
 const elementSchema = z.object({
@@ -65,7 +69,8 @@ function normalizeRestaurant(raw: unknown): Restaurant | null {
 function buildQuery(point: Coordinates, radiusMeters: number): string {
   // Only validated numbers and fixed tag expressions enter Overpass QL.
   const location = `around:${Math.round(radiusMeters)},${point.lat},${point.lon}`;
-  return `[out:json][timeout:25];(nwr["amenity"~"^(restaurant|cafe|fast_food|food_court|ice_cream)$"](${location});nwr["shop"~"^(bakery|confectionery)$"](${location}););out center;`;
+  const timeoutSeconds = radiusMeters > 5000 ? 90 : 25;
+  return `[out:json][timeout:${timeoutSeconds}];(nwr["amenity"~"^(restaurant|cafe|fast_food|food_court|ice_cream)$"](${location});nwr["shop"~"^(bakery|confectionery)$"](${location}););out center;`;
 }
 
 export async function fetchRestaurantsNear(
@@ -77,13 +82,13 @@ export async function fetchRestaurantsNear(
   if (
     !validCoordinates(point) ||
     !Number.isFinite(radiusMeters) ||
-    radiusMeters < 300 ||
-    radiusMeters > 5000
+    radiusMeters < MIN_SEARCH_RADIUS_METERS ||
+    radiusMeters > MAX_SEARCH_RADIUS_METERS
   ) {
     throw new RangeError('Invalid search area');
   }
 
-  const timeout = AbortSignal.timeout(30_000);
+  const timeout = AbortSignal.timeout(radiusMeters > 5000 ? 95_000 : 30_000);
   const requestSignal = AbortSignal.any([signal, timeout]);
   let payload: unknown;
 

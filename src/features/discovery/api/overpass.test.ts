@@ -57,4 +57,38 @@ describe('fetchRestaurantsNear', () => {
       ),
     ).rejects.toMatchObject({ code: 'RATE_LIMITED' });
   });
+
+  it('reports an overloaded Overpass server without blaming the user connection', async () => {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response('', { status: 504 }));
+
+    await expect(
+      fetchRestaurantsNear(
+        { lat: 13.746, lon: 100.534 },
+        10_000,
+        new AbortController().signal,
+        fetcher,
+      ),
+    ).rejects.toMatchObject({ code: 'SERVER_BUSY' });
+  });
+
+  it('accepts a 10 km radius and rejects values beyond the search limit', async () => {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response(JSON.stringify({ elements: [] })));
+    const point = { lat: 13.746, lon: 100.534 };
+    const signal = new AbortController().signal;
+
+    await expect(
+      fetchRestaurantsNear(point, 10_000, signal, fetcher),
+    ).resolves.toEqual([]);
+    expect(String(fetcher.mock.calls[0]?.[1]?.body)).toContain(
+      '10000%2C13.746%2C100.534',
+    );
+    await expect(
+      fetchRestaurantsNear(point, 10_100, signal, fetcher),
+    ).rejects.toBeInstanceOf(RangeError);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
 });
