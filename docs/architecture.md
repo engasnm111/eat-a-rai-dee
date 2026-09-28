@@ -33,4 +33,4 @@ app
 
 ## Hosting
 
-Vite builds the static app with `/eat-a-rai-dee/` as its GitHub Pages base path; local development uses `/`. GitHub Actions validates pull requests and deploys successful `main` builds to GitHub Pages. The public Overpass endpoint and OSM tile server are unsuitable for high traffic without a service plan or self-hosted alternative.
+Vite builds the static app with `/eat-a-rai-dee/` as its GitHub Pages base path; local development uses `/`. GitHub Actions validates pull requests and deploys successful `dev` builds to GitHub Pages. The public Overpass endpoint and OSM tile server are unsuitable for high traffic without a service plan or self-hosted alternative.
