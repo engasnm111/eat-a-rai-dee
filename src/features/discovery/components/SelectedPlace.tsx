@@ -5,15 +5,26 @@ import {
   directionsUrl,
   openStreetMapUrl,
 } from '../model/place-details';
-import type { RestaurantWithDistance } from '../model/types';
+import type {
+  Coordinates,
+  RestaurantWithDistance,
+  TravelMode,
+} from '../model/types';
 import { DistanceLabel, OpenStatus } from './PlaceMeta';
 
 interface SelectedPlaceProps {
   place: RestaurantWithDistance;
+  travelMode: TravelMode;
+  origin?: Coordinates;
   onClose: () => void;
 }
 
-export function SelectedPlace({ place, onClose }: SelectedPlaceProps) {
+export function SelectedPlace({
+  place,
+  travelMode,
+  origin,
+  onClose,
+}: SelectedPlaceProps) {
   const { t } = useTranslation();
   const address = addressFor(place);
 
@@ -42,12 +53,12 @@ export function SelectedPlace({ place, onClose }: SelectedPlaceProps) {
       <div className="selected-place__actions">
         <a
           className="primary-button"
-          href={directionsUrl(place.coordinate)}
+          href={directionsUrl(place.coordinate, travelMode, origin)}
           target="_blank"
           rel="noopener noreferrer"
         >
           <Navigation size={17} aria-hidden="true" />
-          {t('place.route')}
+          {t('place.route', { mode: t(`search.travelMode.${travelMode}`) })}
         </a>
         <a
           className="source-link"

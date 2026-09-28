@@ -10,6 +10,8 @@ A bilingual lunch finder built with React and TypeScript. Pick a location, searc
 
 The screenshot uses the sample point in central Bangkok. Restaurant data comes from OpenStreetMap and may change.
 
+![Search dialog with motorcycle directions, a 10 km search radius, and Google sign-in](docs/screenshots/search-travel-modes.png)
+
 ## Run locally
 
 Requires Node.js 22.12 or newer and npm.
@@ -19,7 +21,7 @@ npm ci
 npm run dev
 ```
 
-Open the URL printed by Vite, normally `http://127.0.0.1:5173/`. The current restaurant search does not require an API key or an `.env` file.
+Open the URL printed by Vite, normally `http://127.0.0.1:5173/`. Restaurant search does not require an API key. Google sign-in uses the Supabase URL and publishable key in `.env.local`; see [Supabase setup](docs/supabase-setup.md).
 
 | Command                | Purpose                                      |
 | ---------------------- | -------------------------------------------- |
@@ -33,9 +35,10 @@ Open the URL printed by Vite, normally `http://127.0.0.1:5173/`. The current res
 ## Features
 
 - Search by restaurant name or dish; search and combine 23 food categories, including buffet, shabu/suki, and crispy pork.
-- Choose your device location, pick a point on the map, or start from the sample point in central Bangkok. Set a 300 m to 5 km radius.
+- Choose your device location, pick a point on the map, or start from the sample point in central Bangkok. Set a 300 m to 10 km radius.
 - Filter by opening hours, vegetarian options, wheelchair access, takeaway, and delivery when source tags support them.
-- Explore results by distance, select map pins, and open Google Maps directions.
+- Explore results by straight-line distance, select map pins, and open Google Maps directions for car, motorcycle, bicycle, or walking travel.
+- Sign in and out with Google through Supabase Auth once the Google provider is enabled in the Dashboard.
 - Switch between Thai and English. The interface uses the Prompt font and adapts to desktop and mobile screens.
 
 ## Project layout
@@ -47,8 +50,10 @@ Open the URL printed by Vite, normally `http://127.0.0.1:5173/`. The current res
 │   └── PULL_REQUEST_TEMPLATE.md           # Review checklist
 ├── docs/
 │   ├── architecture.md                    # Module boundaries and search flow
-│   ├── supabase-setup.md                  # Dashboard and future Auth setup
-│   └── screenshots/home-desktop.png       # README preview
+│   ├── supabase-setup.md                  # Auth setup in GitHub, Supabase, and Google
+│   └── screenshots/
+│       ├── home-desktop.png               # Results and map preview
+│       └── search-travel-modes.png        # Travel mode and radius preview
 ├── public/
 │   ├── favicon.svg
 │   └── logo.svg
@@ -62,6 +67,9 @@ Open the URL printed by Vite, normally `http://127.0.0.1:5173/`. The current res
 │   │   ├── Brand.tsx                      # Shared branding
 │   │   └── LanguageSwitch.tsx             # Language control
 │   ├── config/map.ts                      # Map and provider settings
+│   ├── features/auth/
+│   │   ├── AuthControl.tsx                # Sign-in, account, and sign-out UI
+│   │   └── useAuth.ts                     # Supabase session lifecycle
 │   ├── features/discovery/
 │   │   ├── index.ts                       # Public feature entry point
 │   │   ├── DiscoveryPage.tsx              # Search, results, and map composition
@@ -74,7 +82,8 @@ Open the URL printed by Vite, normally `http://127.0.0.1:5173/`. The current res
 │   │   │   ├── quick-filter-catalog.ts    # Food category definitions
 │   │   │   ├── filter-restaurants.ts      # Distance and filter rules
 │   │   │   ├── filter-restaurants.test.ts # Filtering tests
-│   │   │   └── place-details.ts           # Addresses and external map links
+│   │   │   ├── place-details.ts           # Addresses and external map links
+│   │   │   └── place-details.test.ts      # Google Maps travel mode links
 │   │   └── components/
 │   │       ├── SearchDialog.tsx           # Search form
 │   │       ├── QuickFilters.tsx           # Category shortcuts
@@ -83,7 +92,9 @@ Open the URL printed by Vite, normally `http://127.0.0.1:5173/`. The current res
 │   │       ├── PlaceMeta.tsx              # Place facts and availability
 │   │       ├── SelectedPlace.tsx          # Selected map place
 │   │       └── MapCanvas.tsx              # Leaflet map and pins
-│   └── lib/http.ts                        # Shared HTTP boundary
+│   └── lib/
+│       ├── http.ts                        # Shared HTTP boundary
+│       └── supabase.ts                    # Browser client with publishable key
 ├── supabase/config.toml                  # Local CLI config; no migrations yet
 ├── index.html                            # Static HTML entry point and CSP
 ├── vite.config.ts                        # Vite build and Pages base path
@@ -94,13 +105,13 @@ See [Architecture](docs/architecture.md) for the data flow and module boundaries
 
 ## Supabase status
 
-The `supabase/` directory prepares this repository for Supabase's GitHub integration. **The website does not yet use Supabase Auth or store favorites and comments.** Connecting the repository in the Supabase Dashboard does not add those features by itself. Follow [Supabase setup](docs/supabase-setup.md) for the GitHub integration, future browser keys, Google sign-in settings, and secret handling.
+The website includes a Supabase Auth client and a Google sign-in button. The production build reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` from GitHub Actions variables. **Google sign-in remains unavailable until the Google provider is enabled in the Supabase Dashboard.** Favorites and comments have not been built. Follow [Supabase setup](docs/supabase-setup.md) for the exact Dashboard steps and key handling.
 
 ## Data and limitations
 
-Map tiles and place data come from OpenStreetMap and the public Overpass API. Category matches use names and available tags; a restaurant may be missing or lack dish-level information. Filters requiring a specific tag exclude places where it is unknown. OpenStreetMap does not provide Google review scores, so the rating control is unavailable rather than showing invented ratings.
+Map tiles and place data come from OpenStreetMap and the public Overpass API. Category matches use names and available tags; a restaurant may be missing or lack dish-level information. Filters requiring a specific tag exclude places where it is unknown. OpenStreetMap does not provide Google review scores, so the rating control is unavailable rather than showing invented ratings. Search radius and result distances are measured in a straight line, not along roads. Google Maps calculates the actual route for the selected travel mode; motorcycle and bicycle routing depend on local coverage. Wider searches can take longer or fail when the public Overpass service is busy.
 
-The app sends the selected search point and radius to Overpass only when a search starts. It stores the language choice in the browser; it does not store location history. Google Maps directions use [Maps URLs](https://developers.google.com/maps/documentation/urls/get-started), which need no API key. Public map and search services have no availability guarantee and are not designed for large-scale traffic. Review the [OSM tile policy](https://operations.osmfoundation.org/policies/tiles/) and [Overpass usage guidance](https://dev.overpass-api.de/overpass-doc/en/preface/commons.html) before wider deployment.
+The app sends the selected search point and radius to Overpass only when a search starts. It stores language choice and Supabase Auth session in the browser; it does not store location history. Google Maps directions use [Maps URLs](https://developers.google.com/maps/documentation/urls/get-started), which need no API key. Public map and search services have no availability guarantee and are not designed for large-scale traffic. Review the [OSM tile policy](https://operations.osmfoundation.org/policies/tiles/) and [Overpass usage guidance](https://dev.overpass-api.de/overpass-doc/en/preface/commons.html) before wider deployment.
 
 ## Delivery
 

@@ -1,5 +1,5 @@
 export type DataErrorCode =
-  'RATE_LIMITED' | 'UNAVAILABLE' | 'BAD_RESPONSE' | 'TIMEOUT';
+  'RATE_LIMITED' | 'UNAVAILABLE' | 'BAD_RESPONSE' | 'TIMEOUT' | 'SERVER_BUSY';
 
 export class DataError extends Error {
   constructor(public readonly code: DataErrorCode) {
@@ -31,6 +31,12 @@ export async function postFormJson(
   }
 
   if (response.status === 429) throw new DataError('RATE_LIMITED');
+  if (
+    response.status === 502 ||
+    response.status === 503 ||
+    response.status === 504
+  )
+    throw new DataError('SERVER_BUSY');
   if (!response.ok) throw new DataError('UNAVAILABLE');
 
   try {

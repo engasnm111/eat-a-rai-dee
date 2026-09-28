@@ -11,6 +11,8 @@ import { useTranslation } from 'react-i18next';
 import { Brand } from '../../components/ui/Brand';
 import { LanguageSwitch } from '../../components/ui/LanguageSwitch';
 import { MAP_CONFIG } from '../../config/map';
+import { AuthControl } from '../auth/AuthControl';
+import { useAuth } from '../auth/useAuth';
 import { useDiscovery } from './hooks/useDiscovery';
 import { ResultsPanel } from './components/ResultsPanel';
 import { SearchDialog } from './components/SearchDialog';
@@ -25,6 +27,7 @@ const MapCanvas = lazy(() =>
 
 export function DiscoveryPage() {
   const { t, i18n } = useTranslation();
+  const auth = useAuth();
   const discovery = useDiscovery();
   const { updateOrigin } = discovery;
   const [dialogOpen, setDialogOpen] = useState(true);
@@ -109,6 +112,7 @@ export function DiscoveryPage() {
             {t('header.discover')}
           </span>
           <LanguageSwitch />
+          <AuthControl auth={auth} placement="header" />
           <button
             type="button"
             className="header-search-button"
@@ -205,6 +209,12 @@ export function DiscoveryPage() {
             {selectedPlace && !picking && (
               <SelectedPlace
                 place={selectedPlace}
+                travelMode={discovery.criteria.travelMode}
+                origin={
+                  discovery.locationKind === 'sample'
+                    ? undefined
+                    : discovery.origin
+                }
                 onClose={() => setSelectedId(null)}
               />
             )}
@@ -225,6 +235,7 @@ export function DiscoveryPage() {
 
       {dialogOpen && (
         <SearchDialog
+          auth={auth}
           criteria={draft}
           locationKind={discovery.locationKind}
           locating={locating}

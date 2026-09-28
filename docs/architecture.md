@@ -4,12 +4,12 @@
 
 ```text
 app
-  -> features/discovery
+  -> features/discovery -> features/auth
        -> components/ui, config, lib
        -> model (pure functions and types)
 ```
 
-`app` composes the page and translations. `features/discovery` owns restaurant search and exposes its public entry point through `index.ts`. Shared UI, configuration, and HTTP code do not import back into the feature. This keeps provider changes and presentation changes local.
+`app` composes the page and translations. `features/discovery` owns restaurant search and exposes its public entry point through `index.ts`. `features/auth` owns the login button and session state. Shared UI, configuration, and HTTP code do not import back into features.
 
 ## Search flow
 
@@ -29,7 +29,7 @@ app
 
 ## Supabase boundary
 
-`supabase/config.toml` prepares local CLI configuration and gives the GitHub integration a repository-root `supabase/` directory. It contains no migration and does not connect the current React app to Supabase. Future login, favorites, and comments should use a browser client with the publishable key, versioned SQL migrations, Row Level Security policies, and indexes for per-user and per-place queries. Privileged keys and Google OAuth secrets must remain outside the browser and Git. See [Supabase setup](supabase-setup.md).
+`lib/supabase.ts` creates a browser client from the Supabase URL and publishable key. `features/auth/useAuth.ts` observes browser session changes and starts Google OAuth; the redirect returns to the Pages base path. This login does not yet authorize restaurant data, favorites, or comments. Future database features need versioned SQL migrations, Row Level Security policies, and indexes for per-user and per-place queries. Privileged keys and Google OAuth secrets must remain outside the browser and Git. See [Supabase setup](supabase-setup.md).
 
 ## Hosting
 

@@ -102,6 +102,7 @@ export function useDiscovery() {
     setCriteria((current) => ({
       ...DEFAULT_CRITERIA,
       radiusMeters: current.radiusMeters,
+      travelMode: current.travelMode,
     }));
   }, []);
 
