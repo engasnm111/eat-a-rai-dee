@@ -57,7 +57,7 @@ The app sends the selected search point and radius to Overpass only when a searc
 
 ## Delivery
 
-The repository uses `main` and `dev`. Changes to `main` go through a pull request. CI/CD and GitHub Pages deployment are planned after manual acceptance; Vite already sets the `/eat-a-rai-dee/` base path for the intended Pages URL.
+The repository uses `main` and `dev`. Changes to `main` go through a pull request. GitHub Actions checks pull requests into both branches and publishes successful `main` builds to [GitHub Pages](https://engasnm111.github.io/eat-a-rai-dee/). The Supabase GitHub integration manages future database migrations and functions separately; it does not publish the website.
 
 ## License and credits
 
