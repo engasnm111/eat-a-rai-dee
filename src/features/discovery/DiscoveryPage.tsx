@@ -1,9 +1,17 @@
-import { lazy, Suspense, useCallback, useRef, useState } from 'react';
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import {
   ArrowRight,
   MapPin,
   Navigation,
   SlidersHorizontal,
+  UserRound,
   UtensilsCrossed,
   X,
 } from 'lucide-react';
@@ -13,11 +21,16 @@ import { LanguageSwitch } from '../../components/ui/LanguageSwitch';
 import { MAP_CONFIG } from '../../config/map';
 import { AuthControl } from '../auth/AuthControl';
 import { useAuth } from '../auth/useAuth';
-import { useDiscovery } from './hooks/useDiscovery';
+import { MemberPanel } from '../member/components/MemberPanel';
+import { useMemberData } from '../member/hooks/useMemberData';
+import type { RestaurantSnapshot } from '../member/model/types';
+import { pickSpinWinner, rankSpinCandidates } from '../spin/model/free-spin';
 import { ResultsPanel } from './components/ResultsPanel';
 import { SearchDialog } from './components/SearchDialog';
 import { SelectedPlace } from './components/SelectedPlace';
-import type { Coordinates } from './model/types';
+import { useDiscovery } from './hooks/useDiscovery';
+import { addressFor } from './model/place-details';
+import type { Coordinates, RestaurantWithDistance } from './model/types';
 
 const MapCanvas = lazy(() =>
   import('./components/MapCanvas').then((module) => ({
@@ -25,18 +38,49 @@ const MapCanvas = lazy(() =>
   })),
 );
 
+function snapshotFor(place: RestaurantWithDistance): RestaurantSnapshot {
+  return {
+    restaurantId: place.id,
+    restaurantName: place.name,
+    address: addressFor(place),
+    latitude: place.coordinate.lat,
+    longitude: place.coordinate.lon,
+  };
+}
+
+function spinDelay(step: number) {
+  return new Promise<void>((resolve) => {
+    window.setTimeout(resolve, 70 + step * 14);
+  });
+}
+
 export function DiscoveryPage() {
   const { t, i18n } = useTranslation();
   const auth = useAuth();
   const discovery = useDiscovery();
   const { updateOrigin } = discovery;
+  const member = useMemberData(
+    auth.user?.id ?? null,
+    discovery.visibleRestaurants.map((place) => place.id),
+  );
   const [dialogOpen, setDialogOpen] = useState(true);
+  const [memberOpen, setMemberOpen] = useState(false);
   const [draft, setDraft] = useState(discovery.criteria);
   const [picking, setPicking] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [spinRunning, setSpinRunning] = useState(false);
+  const [spinPreview, setSpinPreview] = useState<string | null>(null);
   const locationAttemptRef = useRef(0);
+  const spinAttemptRef = useRef(0);
   const [locationErrorKey, setLocationErrorKey] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const spinContextKey = discovery.visibleRestaurants
+    .map((place) => `${place.id}:${place.distanceMeters}`)
+    .join('\n');
+
+  useLayoutEffect(() => {
+    spinAttemptRef.current += 1;
+  }, [spinContextKey]);
 
   const selectedPlace =
     discovery.visibleRestaurants.find((place) => place.id === selectedId) ??
@@ -44,7 +88,6 @@ export function DiscoveryPage() {
   const radiusLabel = new Intl.NumberFormat(i18n.language, {
     maximumFractionDigits: 1,
   }).format(discovery.criteria.radiusMeters / 1000);
-
   const openSearch = () => {
     setDraft(discovery.criteria);
     setLocationErrorKey(null);
@@ -55,7 +98,37 @@ export function DiscoveryPage() {
   const submitSearch = () => {
     setDialogOpen(false);
     setSelectedId(null);
+    setSpinPreview(null);
     void discovery.search(draft);
+  };
+
+  const runSpin = async () => {
+    if (spinRunning) return;
+    const candidates = rankSpinCandidates(
+      discovery.visibleRestaurants,
+      member.ratings,
+    );
+    if (candidates.length === 0) return;
+
+    const attempt = ++spinAttemptRef.current;
+    setSpinRunning(true);
+    try {
+      for (let step = 0; step < 12; step += 1) {
+        if (attempt !== spinAttemptRef.current) return;
+        const preview = pickSpinWinner(candidates);
+        if (preview) setSpinPreview(preview.name);
+        await spinDelay(step);
+      }
+
+      if (attempt !== spinAttemptRef.current) return;
+      const winner = pickSpinWinner(candidates);
+      if (!winner) return;
+      setSpinPreview(winner.name);
+      setSelectedId(winner.id);
+      if (auth.user) await member.recordSpin(snapshotFor(winner));
+    } finally {
+      setSpinRunning(false);
+    }
   };
 
   const useMyLocation = () => {
@@ -90,6 +163,7 @@ export function DiscoveryPage() {
     (point: Coordinates) => {
       updateOrigin(point, 'picked');
       setSelectedId(null);
+      setSpinPreview(null);
       setPicking(false);
       setDialogOpen(true);
       setLocationErrorKey(null);
@@ -113,6 +187,14 @@ export function DiscoveryPage() {
           </span>
           <LanguageSwitch />
           <AuthControl auth={auth} placement="header" />
+          <button
+            type="button"
+            className="member-nav-button"
+            onClick={() => setMemberOpen(true)}
+          >
+            <UserRound size={16} aria-hidden="true" />
+            <span>{t('header.memberData')}</span>
+          </button>
           <button
             type="button"
             className="header-search-button"
@@ -156,7 +238,13 @@ export function DiscoveryPage() {
             errorCode={discovery.errorCode}
             restaurants={discovery.visibleRestaurants}
             criteria={discovery.criteria}
+            ratings={member.ratings}
+            ratingsFailed={member.ratingsStatus === 'error'}
             selectedId={selectedId}
+            spinRunning={spinRunning}
+            spinPreview={spinPreview}
+            userLoggedIn={Boolean(auth.user)}
+            onSpin={() => void runSpin()}
             onSelect={setSelectedId}
             onEdit={openSearch}
             onRetry={() => void discovery.search(discovery.criteria)}
@@ -208,6 +296,7 @@ export function DiscoveryPage() {
             )}
             {selectedPlace && !picking && (
               <SelectedPlace
+                key={selectedPlace.id}
                 place={selectedPlace}
                 travelMode={discovery.criteria.travelMode}
                 origin={
@@ -215,6 +304,14 @@ export function DiscoveryPage() {
                     ? undefined
                     : discovery.origin
                 }
+                user={auth.user}
+                rating={member.ratings[selectedPlace.id]}
+                favorite={member.favoriteIds.has(selectedPlace.id)}
+                review={member.reviewsByRestaurant.get(selectedPlace.id)}
+                actionError={member.actionError}
+                onToggleFavorite={member.toggleFavorite}
+                onSaveReview={member.saveReview}
+                onDeleteReview={member.deleteReview}
                 onClose={() => setSelectedId(null)}
               />
             )}
@@ -232,6 +329,24 @@ export function DiscoveryPage() {
         <span>{t('footer.source')}</span>
         <span>{t('footer.credit')}</span>
       </footer>
+
+      <MemberPanel
+        open={memberOpen}
+        user={auth.user}
+        status={member.recordsStatus}
+        records={member.records}
+        actionError={member.actionError}
+        onClose={() => setMemberOpen(false)}
+        onRemoveFavorite={async (place) => {
+          await member.toggleFavorite(place);
+        }}
+        onSaveReview={async (place, rating, comment) => {
+          await member.saveReview(place, rating, comment);
+        }}
+        onDeleteReview={async (reviewId) => {
+          await member.deleteReview(reviewId);
+        }}
+      />
 
       {dialogOpen && (
         <SearchDialog

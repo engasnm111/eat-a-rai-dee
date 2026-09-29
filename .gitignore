@@ -1,6 +1,10 @@
 node_modules/
 dist/
 coverage/
+.serena/
+.kilo/
+.codegraph/
+*.sql
 .env
 .env.*
 !.env.example

@@ -1,6 +1,6 @@
-# Supabase Auth setup
+# Supabase Auth and member-data setup
 
-The website has a Google sign-in button backed by Supabase Auth. Three settings are needed: public browser values in the GitHub Pages build, allowed return URLs in Supabase, and a Google OAuth client connected to the Supabase Google provider. The repository's Supabase GitHub integration is a separate database deployment feature; connecting that integration alone does not enable login.
+The website uses Supabase for Google Auth and member data. Browser builds need the project URL and publishable key. Google sign-in additionally needs a Google OAuth client connected to the Supabase Google provider. Member tables and policies are administered in the Supabase project separately from the GitHub Pages deployment.
 
 ## 1. Local and GitHub Pages browser values
 
@@ -11,7 +11,7 @@ The local `.env.local` file is ignored by Git. Vite reads it only when running o
 | `VITE_SUPABASE_URL`             | Project URL from **Connect** or **Project Settings → API Keys** |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Publishable key from the same screen                            |
 
-These two repository variables have already been set from the local `.env.local` file. `.github/workflows/pages.yml` passes them only to the Vite build step. The publishable key is meant to be visible in the browser; it is **not** a database secret. Changes to GitHub variables require a fresh `main` build to appear on Pages.
+These two repository variables have already been set for the hosted build. `.github/workflows/pages.yml` passes them only to the Vite build step. The publishable key is meant to be visible in the browser; it is **not** a database secret. Changes to GitHub variables require a fresh `main` build to appear on Pages.
 
 Never put a `service_role`/secret key, database password, Google OAuth client secret, or personal access token in any `VITE_` variable, `.env.local`, or GitHub repository variable. The Google client secret belongs only in the Supabase Dashboard.
 
@@ -35,12 +35,18 @@ In [Google Cloud Console](https://console.cloud.google.com/), select or create a
 
 ## 4. Enable Google in Supabase
 
-Return to **Supabase Dashboard → Authentication → Sign In / Providers → Google**. Enable Google, paste the Client ID and Client Secret from step 3, and save. The Client Secret stays in Supabase. As checked during implementation, this provider was **disabled**; the login button cannot complete sign-in until this step is done.
+Return to **Supabase Dashboard → Authentication → Sign In / Providers → Google**. Enable Google, paste the Client ID and Client Secret from step 3, and save. The Client Secret stays in Supabase. At the latest implementation check, this provider was still **disabled** because no Google Client ID/Secret had been configured; the login button cannot complete sign-in until this step is done.
 
 Open the local or hosted website, click **เข้าสู่ระบบ Google**, approve the Google consent screen, and confirm that the website shows your account and **ออกจากระบบ**. If the Google app remains in Testing, sign in with an account listed under Test users. New accounts should then appear in **Supabase Dashboard → Authentication → Users**.
 
-## Other Supabase work
+## 5. Member-data boundary
 
-The repository has no database migrations, favorites, or comments tables. For the existing GitHub integration, use repository `engasnm111/eat-a-rai-dee`, working directory `.`, and production branch `main`. The integration's **Deploy to production** switch controls Supabase database changes on merges to `main`; it does not publish the React site or enable Auth. GitHub Actions publishes the site from `main` separately.
+The production Supabase project contains the member-data surfaces used by the browser app: owner-scoped favorites, reviews, and free-spin history plus an aggregate restaurant-rating summary. Row Level Security is the authorization boundary for member-owned records. Before changing this schema or its policies, validate at minimum that an owner can access their own rows, a different authenticated user cannot read or mutate those rows, and anonymous access is limited to the intended aggregate rating surface.
+
+SQL working files are intentionally local-only and ignored by this repository. Do not add generated/local SQL files to Git; apply and validate database changes through the controlled Supabase administration workflow instead.
+
+## Delivery separation
+
+GitHub Actions publishes the React site from `main` to GitHub Pages. Supabase database administration and Google Auth provider configuration are separate operations. The connected Supabase GitHub integration does not by itself enable Google login, and because this repository intentionally does not track SQL working files, it should not be treated as the source of database-schema delivery.
 
 Official references: [Google sign-in](https://supabase.com/docs/guides/auth/social-login/auth-google), [redirect URLs](https://supabase.com/docs/guides/auth/redirect-urls), and [API keys](https://supabase.com/docs/guides/getting-started/api-keys).

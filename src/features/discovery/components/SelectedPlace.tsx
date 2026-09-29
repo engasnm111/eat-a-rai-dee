@@ -1,5 +1,12 @@
 import { ArrowUpRight, MapPinned, Navigation, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import type { User } from '@supabase/supabase-js';
+import { PlaceMemberActions } from '../../member/components/PlaceMemberActions';
+import type {
+  RatingSummary,
+  RestaurantSnapshot,
+  ReviewRecord,
+} from '../../member/model/types';
 import {
   addressFor,
   directionsUrl,
@@ -16,6 +23,18 @@ interface SelectedPlaceProps {
   place: RestaurantWithDistance;
   travelMode: TravelMode;
   origin?: Coordinates;
+  user: User | null;
+  rating?: RatingSummary;
+  favorite: boolean;
+  review?: ReviewRecord;
+  actionError: boolean;
+  onToggleFavorite: (place: RestaurantSnapshot) => Promise<boolean>;
+  onSaveReview: (
+    place: RestaurantSnapshot,
+    rating: number,
+    comment: string,
+  ) => Promise<boolean>;
+  onDeleteReview: (reviewId: number) => Promise<boolean>;
   onClose: () => void;
 }
 
@@ -23,10 +42,25 @@ export function SelectedPlace({
   place,
   travelMode,
   origin,
+  user,
+  rating,
+  favorite,
+  review,
+  actionError,
+  onToggleFavorite,
+  onSaveReview,
+  onDeleteReview,
   onClose,
 }: SelectedPlaceProps) {
   const { t } = useTranslation();
   const address = addressFor(place);
+  const snapshot: RestaurantSnapshot = {
+    restaurantId: place.id,
+    restaurantName: place.name,
+    address,
+    latitude: place.coordinate.lat,
+    longitude: place.coordinate.lon,
+  };
 
   return (
     <section className="selected-place" aria-label={place.name}>
@@ -50,6 +84,18 @@ export function SelectedPlace({
         <MapPinned size={16} aria-hidden="true" />
         {address ?? t('place.addressUnknown')}
       </p>
+      <PlaceMemberActions
+        key={`${user?.id ?? 'guest'}:${place.id}:${review?.id ?? 'new'}:${review?.updatedAt ?? ''}`}
+        user={user}
+        place={snapshot}
+        favorite={favorite}
+        review={review}
+        summary={rating}
+        actionError={actionError}
+        onToggleFavorite={onToggleFavorite}
+        onSaveReview={onSaveReview}
+        onDeleteReview={onDeleteReview}
+      />
       <div className="selected-place__actions">
         <a
           className="primary-button"
@@ -70,6 +116,11 @@ export function SelectedPlace({
           <ArrowUpRight size={15} aria-hidden="true" />
         </a>
       </div>
+      {travelMode === 'two-wheeler' && (
+        <p className="selected-place__route-note">
+          {t('place.motorcycleNote')}
+        </p>
+      )}
     </section>
   );
 }

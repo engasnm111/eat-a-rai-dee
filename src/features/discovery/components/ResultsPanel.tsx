@@ -2,12 +2,14 @@ import { useState } from 'react';
 import {
   ArrowDown,
   Compass,
+  Dices,
   RotateCcw,
   SlidersHorizontal,
   UtensilsCrossed,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { DataErrorCode } from '../../../lib/http';
+import type { RatingSummary } from '../../member/model/types';
 import type { SearchStatus } from '../hooks/useDiscovery';
 import type {
   QuickFilterId,
@@ -24,7 +26,13 @@ interface ResultsPanelProps {
   errorCode: DataErrorCode | 'UNKNOWN' | null;
   restaurants: RestaurantWithDistance[];
   criteria: SearchCriteria;
+  ratings: Record<string, RatingSummary>;
+  ratingsFailed: boolean;
   selectedId: string | null;
+  spinRunning: boolean;
+  spinPreview: string | null;
+  userLoggedIn: boolean;
+  onSpin: () => void;
   onSelect: (id: string) => void;
   onEdit: () => void;
   onRetry: () => void;
@@ -37,7 +45,13 @@ export function ResultsPanel({
   errorCode,
   restaurants,
   criteria,
+  ratings,
+  ratingsFailed,
   selectedId,
+  spinRunning,
+  spinPreview,
+  userLoggedIn,
+  onSpin,
   onSelect,
   onEdit,
   onRetry,
@@ -101,10 +115,38 @@ export function ResultsPanel({
       </div>
 
       {status === 'success' && restaurants.length > 0 && (
-        <div className="results-panel__sort">
-          <Compass size={15} aria-hidden="true" />
-          {t('results.sort')}
-        </div>
+        <>
+          <div className="results-panel__sort">
+            <Compass size={15} aria-hidden="true" />
+            {t('results.sort')}
+          </div>
+          <section className="free-spin" aria-live="polite">
+            <button
+              type="button"
+              className="primary-button free-spin__button"
+              disabled={spinRunning}
+              onClick={onSpin}
+            >
+              <Dices size={18} aria-hidden="true" />
+              {t(spinRunning ? 'spin.running' : 'spin.button')}
+            </button>
+            <div
+              className={
+                spinRunning
+                  ? 'free-spin__display is-spinning'
+                  : 'free-spin__display'
+              }
+            >
+              {spinPreview ?? t('spin.rule')}
+            </div>
+            <small>{t(userLoggedIn ? 'spin.member' : 'spin.guest')}</small>
+            {ratingsFailed && (
+              <small className="free-spin__warning">
+                {t('spin.ratingsFailed')}
+              </small>
+            )}
+          </section>
+        </>
       )}
 
       <div className="results-panel__body" aria-live="polite">
@@ -158,6 +200,7 @@ export function ResultsPanel({
                 <RestaurantCard
                   key={place.id}
                   place={place}
+                  rating={ratings[place.id]}
                   selected={selectedId === place.id}
                   onSelect={onSelect}
                 />

@@ -1,20 +1,27 @@
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Star } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import type { RatingSummary } from '../../member/model/types';
 import type { RestaurantWithDistance } from '../model/types';
 import { DistanceLabel, OpenStatus } from './PlaceMeta';
 
 interface RestaurantCardProps {
   place: RestaurantWithDistance;
+  rating?: RatingSummary;
   selected: boolean;
   onSelect: (id: string) => void;
 }
 
 export function RestaurantCard({
   place,
+  rating,
   selected,
   onSelect,
 }: RestaurantCardProps) {
   const { t } = useTranslation();
+  let ratingLabel = t('member.noRating');
+  if (rating && rating.count > 0) {
+    ratingLabel = `${rating.average.toFixed(1)} (${rating.count})`;
+  }
 
   return (
     <li>
@@ -39,6 +46,10 @@ export function RestaurantCard({
           <span className="restaurant-card__meta">
             <DistanceLabel distanceMeters={place.distanceMeters} />
             <OpenStatus place={place} />
+          </span>
+          <span className="restaurant-card__rating">
+            <Star size={14} fill="currentColor" aria-hidden="true" />
+            {ratingLabel}
           </span>
         </span>
         <ArrowUpRight
