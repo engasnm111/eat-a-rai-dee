@@ -88,29 +88,44 @@ export async function fetchRestaurantsNear(
     throw new RangeError('Invalid search area');
   }
 
-  const timeout = AbortSignal.timeout(radiusMeters > 5000 ? 95_000 : 30_000);
-  const requestSignal = AbortSignal.any([signal, timeout]);
-  let payload: unknown;
+  const query = buildQuery(point, radiusMeters);
+  let lastError: unknown;
 
-  try {
-    payload = await postFormJson(
-      MAP_CONFIG.overpassUrl,
-      { data: buildQuery(point, radiusMeters) },
-      requestSignal,
-      fetcher,
-    );
-  } catch (error) {
-    if (timeout.aborted && !signal.aborted) throw new DataError('TIMEOUT');
-    throw error;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const timeout = AbortSignal.timeout(radiusMeters > 5000 ? 95_000 : 30_000);
+    const requestSignal = AbortSignal.any([signal, timeout]);
+    let payload: unknown;
+
+    try {
+      payload = await postFormJson(
+        MAP_CONFIG.overpassUrl,
+        { data: query },
+        requestSignal,
+        fetcher,
+      );
+    } catch (error) {
+      if (signal.aborted) throw error;
+      if (timeout.aborted) throw new DataError('TIMEOUT');
+      if (!(error instanceof DataError) || error.code === 'RATE_LIMITED') {
+        throw error;
+      }
+      lastError = error;
+      continue;
+    }
+
+    const parsed = responseSchema.safeParse(payload);
+    if (!parsed.success) {
+      lastError = new DataError('BAD_RESPONSE');
+      continue;
+    }
+
+    const unique = new Map<string, Restaurant>();
+    for (const raw of parsed.data.elements) {
+      const place = normalizeRestaurant(raw);
+      if (place) unique.set(place.id, place);
+    }
+    return [...unique.values()];
   }
 
-  const parsed = responseSchema.safeParse(payload);
-  if (!parsed.success) throw new DataError('BAD_RESPONSE');
-
-  const unique = new Map<string, Restaurant>();
-  for (const raw of parsed.data.elements) {
-    const place = normalizeRestaurant(raw);
-    if (place) unique.set(place.id, place);
-  }
-  return [...unique.values()];
+  throw lastError ?? new DataError('UNAVAILABLE');
 }
