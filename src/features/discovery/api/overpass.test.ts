@@ -56,9 +56,39 @@ describe('fetchRestaurantsNear', () => {
         fetcher,
       ),
     ).rejects.toMatchObject({ code: 'RATE_LIMITED' });
+    expect(fetcher).toHaveBeenCalledTimes(1);
   });
 
-  it('reports an overloaded Overpass server without blaming the user connection', async () => {
+  it('retries the Overpass endpoint once when the server is overloaded', async () => {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response('', { status: 504 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ elements: [] }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      );
+
+    await expect(
+      fetchRestaurantsNear(
+        { lat: 13.746, lon: 100.534 },
+        4100,
+        new AbortController().signal,
+        fetcher,
+      ),
+    ).resolves.toEqual([]);
+
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(fetcher.mock.calls[0]?.[0]).toBe(
+      'https://overpass-api.de/api/interpreter',
+    );
+    expect(fetcher.mock.calls[1]?.[0]).toBe(
+      'https://overpass-api.de/api/interpreter',
+    );
+  });
+
+  it('still reports server overload when both Overpass attempts are unavailable', async () => {
     const fetcher = vi
       .fn<typeof fetch>()
       .mockResolvedValue(new Response('', { status: 504 }));
@@ -66,11 +96,13 @@ describe('fetchRestaurantsNear', () => {
     await expect(
       fetchRestaurantsNear(
         { lat: 13.746, lon: 100.534 },
-        10_000,
+        4100,
         new AbortController().signal,
         fetcher,
       ),
     ).rejects.toMatchObject({ code: 'SERVER_BUSY' });
+
+    expect(fetcher).toHaveBeenCalledTimes(2);
   });
 
   it('accepts a 10 km radius and rejects values beyond the search limit', async () => {
