@@ -11,6 +11,7 @@ const resources = {
       header: {
         discover: 'หาร้านใกล้ฉัน',
         editSearch: 'ปรับการค้นหา',
+        memberData: 'ข้อมูลสมาชิก',
         language: 'ภาษา',
       },
       auth: {
@@ -51,7 +52,7 @@ const resources = {
         radiusHeading: 'ค้นหาไกลแค่ไหน?',
         radiusUnit: '{{distance}} กม.',
         radiusHint:
-          'รัศมีค้นหาวัดเป็นเส้นตรงจากจุดเริ่มต้น ระยะทางบนถนนดูได้ใน Google Maps',
+          'รัศมีค้นหาวัดเป็นเส้นตรงจากจุดเริ่มต้น ปุ่มเส้นทางจะเปิด OpenStreetMap; มอเตอร์ไซค์ใช้โปรไฟล์รถยนต์เพราะเราเตอร์สาธารณะไม่มีโปรไฟล์มอเตอร์ไซค์เฉพาะ',
         locationHeading: 'ค้นหาจากจุดไหน',
         sampleLocation: 'สยาม กรุงเทพฯ (จุดตัวอย่าง)',
         myLocation: 'ตำแหน่งของฉัน',
@@ -62,7 +63,7 @@ const resources = {
         advanced: 'ตัวกรองเพิ่มเติม',
         ratings: 'คะแนนดาว',
         ratingsUnavailable:
-          'ข้อมูล OpenStreetMap ไม่มีคะแนนรีวิวแบบ Google จึงยังกรองดาวไม่ได้',
+          'คะแนนดาวมาจากรีวิวของสมาชิกเว็บนี้เท่านั้น ร้านที่ยังไม่มีรีวิวจะแสดงว่าไม่มีคะแนน',
         ratingAny: 'ทุกคะแนน',
         submit: 'ค้นหาร้านใกล้ฉัน',
         close: 'ปิดหน้าค้นหา',
@@ -123,6 +124,15 @@ const resources = {
         clearFilters: 'ล้างตัวกรอง',
         sort: 'เรียงตามระยะเส้นตรง',
       },
+      spin: {
+        button: 'ฟรีสปิน',
+        running: 'กำลังหมุน...',
+        rule: 'คัดสูงสุด 10 ร้าน โดยคะแนนสมาชิกมากไปน้อย แล้วระยะเส้นตรงใกล้ไปไกล จากนั้นสุ่มอย่างเป็นธรรม',
+        guest: 'เล่นได้โดยไม่ต้องล็อกอิน แต่ประวัติจะไม่ถูกบันทึก',
+        member: 'ผลที่ได้จะบันทึกในประวัติสมาชิก',
+        ratingsFailed:
+          'ยังอ่านคะแนนสมาชิกจาก Supabase ไม่ได้ จึงจัดร้านที่ไม่มีคะแนนตามระยะทางเท่านั้น',
+      },
       place: {
         details: 'ดูรายละเอียดร้าน',
         route: 'ดูเส้นทาง: {{mode}}',
@@ -134,6 +144,8 @@ const resources = {
         distanceKm: '{{distance}} กม.',
         addressUnknown: 'ไม่มีข้อมูลที่อยู่',
         osmDetails: 'ดูข้อมูลต้นทาง',
+        motorcycleNote:
+          'OpenStreetMap ไม่มีโปรไฟล์มอเตอร์ไซค์เฉพาะ ลิงก์นี้จึงใช้โปรไฟล์รถยนต์และควรตรวจข้อจำกัดเส้นทางก่อนเดินทาง',
         category: {
           restaurant: 'ร้านอาหาร',
           cafe: 'คาเฟ่',
@@ -142,6 +154,37 @@ const resources = {
           dessert: 'ของหวาน',
           bakery: 'เบเกอรี่',
         },
+      },
+      member: {
+        title: 'ข้อมูลสมาชิก',
+        signedOut: 'เข้าสู่ระบบ Google เพื่อดูร้านโปรด รีวิว และประวัติฟรีสปิน',
+        loading: 'กำลังโหลดข้อมูลสมาชิก...',
+        loadFailed:
+          'โหลดข้อมูลสมาชิกไม่สำเร็จ ตรวจการเชื่อมต่อ Supabase แล้วลองใหม่',
+        actionFailed: 'บันทึกไม่สำเร็จ กรุณาลองอีกครั้ง',
+        favorites: 'ร้านโปรด',
+        reviews: 'รีวิวของฉัน',
+        spins: 'ประวัติฟรีสปิน',
+        empty: 'ยังไม่มีข้อมูล',
+        date: 'วันที่',
+        restaurant: 'ร้าน',
+        address: 'ที่อยู่',
+        action: 'จัดการ',
+        removeFavorite: 'ยกเลิกร้านโปรด',
+        save: 'บันทึก',
+        delete: 'ลบ',
+        close: 'ปิดข้อมูลสมาชิก',
+        noAddress: 'ไม่มีข้อมูลที่อยู่จาก OSM',
+        guest: 'เข้าสู่ระบบเพื่อบันทึกร้านโปรดและเขียนรีวิว',
+        addFavorite: 'ติดดาวร้านโปรด',
+        removeFavoriteShort: 'ยกเลิกร้านโปรด',
+        noRating: 'ยังไม่มีคะแนนสมาชิก',
+        rating: 'คะแนนของคุณ',
+        comment: 'รีวิวของคุณ',
+        placeholder: 'เล่าประสบการณ์สั้น ๆ (ไม่เกิน 2,000 ตัวอักษร)',
+        addReview: 'เพิ่มรีวิว',
+        updateReview: 'แก้ไขรีวิว',
+        reviewCount: '{{count}} รีวิว',
       },
       errors: {
         RATE_LIMITED: 'เซิร์ฟเวอร์ข้อมูลร้านกำลังยุ่ง รอสักครู่แล้วลองอีกครั้ง',
@@ -169,6 +212,7 @@ const resources = {
       header: {
         discover: 'Find nearby food',
         editSearch: 'Edit search',
+        memberData: 'Member data',
         language: 'Language',
       },
       auth: {
@@ -211,7 +255,7 @@ const resources = {
         radiusHeading: 'Search within',
         radiusUnit: '{{distance}} km',
         radiusHint:
-          'Search radius is straight-line distance from your starting point. Check road distance in Google Maps.',
+          'Search radius is straight-line distance from your starting point. Directions open in OpenStreetMap; motorcycle uses the car profile because the public router has no dedicated motorcycle profile.',
         locationHeading: 'Search from',
         sampleLocation: 'Siam, Bangkok (sample point)',
         myLocation: 'My location',
@@ -222,7 +266,7 @@ const resources = {
         advanced: 'More filters',
         ratings: 'Star rating',
         ratingsUnavailable:
-          'OpenStreetMap has no Google style review scores, so rating filters are unavailable.',
+          'Star ratings come only from reviews by members of this site. Places without reviews remain unrated.',
         ratingAny: 'Any rating',
         submit: 'Find nearby places',
         close: 'Close search',
@@ -284,6 +328,15 @@ const resources = {
         clearFilters: 'Clear filters',
         sort: 'Nearest by straight-line distance',
       },
+      spin: {
+        button: 'Free spin',
+        running: 'Spinning...',
+        rule: 'Takes up to 10 places ordered by member rating, then straight-line distance, and picks fairly at random.',
+        guest: 'Guests can play, but spin history is not saved.',
+        member: 'The selected place will be saved to your member history.',
+        ratingsFailed:
+          'Member ratings are not available from Supabase yet, so unrated places are ordered by distance only.',
+      },
       place: {
         details: 'View place details',
         route: 'Directions: {{mode}}',
@@ -295,6 +348,8 @@ const resources = {
         distanceKm: '{{distance}} km',
         addressUnknown: 'Address not listed',
         osmDetails: 'View source details',
+        motorcycleNote:
+          'OpenStreetMap has no dedicated motorcycle profile here, so this link uses the car profile. Check road restrictions before travelling.',
         category: {
           restaurant: 'Restaurant',
           cafe: 'Café',
@@ -303,6 +358,37 @@ const resources = {
           dessert: 'Desserts',
           bakery: 'Bakery',
         },
+      },
+      member: {
+        title: 'Member data',
+        signedOut:
+          'Sign in with Google to view favorites, reviews, and free-spin history.',
+        loading: 'Loading member data...',
+        loadFailed: 'Could not load member data. Check Supabase and try again.',
+        actionFailed: 'Could not save the change. Please try again.',
+        favorites: 'Favorites',
+        reviews: 'My reviews',
+        spins: 'Free-spin history',
+        empty: 'No data yet',
+        date: 'Date',
+        restaurant: 'Restaurant',
+        address: 'Address',
+        action: 'Actions',
+        removeFavorite: 'Remove favorite',
+        save: 'Save',
+        delete: 'Delete',
+        close: 'Close member data',
+        noAddress: 'No OSM address data',
+        guest: 'Sign in to save favorites and write a review.',
+        addFavorite: 'Add favorite',
+        removeFavoriteShort: 'Remove favorite',
+        noRating: 'No member rating',
+        rating: 'Your rating',
+        comment: 'Your review',
+        placeholder: 'Share a short note (maximum 2,000 characters)',
+        addReview: 'Add review',
+        updateReview: 'Update review',
+        reviewCount: '{{count}} reviews',
       },
       errors: {
         RATE_LIMITED:
