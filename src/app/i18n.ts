@@ -52,7 +52,7 @@ const resources = {
         radiusHeading: 'ค้นหาไกลแค่ไหน?',
         radiusUnit: '{{distance}} กม.',
         radiusHint:
-          'รัศมีค้นหาวัดเป็นเส้นตรงจากจุดเริ่มต้น ปุ่มเส้นทางจะเปิด OpenStreetMap; มอเตอร์ไซค์ใช้โปรไฟล์รถยนต์เพราะเราเตอร์สาธารณะไม่มีโปรไฟล์มอเตอร์ไซค์เฉพาะ',
+          'รัศมีค้นหาวัดเป็นเส้นตรงจากจุดเริ่มต้น ปุ่มหลักจะนำทางด้วย Google Maps และมี OpenStreetMap เป็นตัวเลือกเสริม; โหมดมอเตอร์ไซค์จะใช้โหมดรถยนต์',
         locationHeading: 'ค้นหาจากจุดไหน',
         sampleLocation: 'สยาม กรุงเทพฯ (จุดตัวอย่าง)',
         myLocation: 'ตำแหน่งของฉัน',
@@ -108,6 +108,9 @@ const resources = {
       map: {
         title: 'แผนที่ร้านอาหาร',
         loading: 'กำลังโหลดแผนที่...',
+        locate: 'ตำแหน่งปัจจุบัน',
+        locating: 'กำลังหาตำแหน่ง...',
+        currentLocation: 'ตำแหน่งของฉัน',
         sample: 'จุดเริ่มต้น',
         pickPrompt: 'แตะตำแหน่งบนแผนที่เพื่อกำหนดจุดเริ่มต้น',
         cancelPick: 'ยกเลิก',
@@ -135,7 +138,8 @@ const resources = {
       },
       place: {
         details: 'ดูรายละเอียดร้าน',
-        route: 'ดูเส้นทาง: {{mode}}',
+        route: 'นำทางด้วย Google Maps · {{mode}}',
+        osmRoute: 'OpenStreetMap',
         closeDetails: 'ปิดรายละเอียดร้าน',
         open: 'เปิดอยู่',
         closed: 'ปิดอยู่',
@@ -145,7 +149,7 @@ const resources = {
         addressUnknown: 'ไม่มีข้อมูลที่อยู่',
         osmDetails: 'ดูข้อมูลต้นทาง',
         motorcycleNote:
-          'OpenStreetMap ไม่มีโปรไฟล์มอเตอร์ไซค์เฉพาะ ลิงก์นี้จึงใช้โปรไฟล์รถยนต์และควรตรวจข้อจำกัดเส้นทางก่อนเดินทาง',
+          'โหมดมอเตอร์ไซค์จะเปิด Google Maps ด้วยโหมดรถยนต์ และ OpenStreetMap ก็ใช้โปรไฟล์รถยนต์ ควรตรวจข้อจำกัดเส้นทางก่อนเดินทาง',
         category: {
           restaurant: 'ร้านอาหาร',
           cafe: 'คาเฟ่',
@@ -255,7 +259,7 @@ const resources = {
         radiusHeading: 'Search within',
         radiusUnit: '{{distance}} km',
         radiusHint:
-          'Search radius is straight-line distance from your starting point. Directions open in OpenStreetMap; motorcycle uses the car profile because the public router has no dedicated motorcycle profile.',
+          'Search radius is straight-line distance from your starting point. The primary directions button uses Google Maps with OpenStreetMap as a secondary option; motorcycle uses driving mode.',
         locationHeading: 'Search from',
         sampleLocation: 'Siam, Bangkok (sample point)',
         myLocation: 'My location',
@@ -311,6 +315,9 @@ const resources = {
       map: {
         title: 'Restaurant map',
         loading: 'Loading map...',
+        locate: 'Current location',
+        locating: 'Finding location...',
+        currentLocation: 'My location',
         sample: 'Starting point',
         pickPrompt: 'Tap the map to choose your starting point',
         cancelPick: 'Cancel',
@@ -339,7 +346,8 @@ const resources = {
       },
       place: {
         details: 'View place details',
-        route: 'Directions: {{mode}}',
+        route: 'Navigate with Google Maps · {{mode}}',
+        osmRoute: 'OpenStreetMap',
         closeDetails: 'Close place details',
         open: 'Open now',
         closed: 'Closed now',
@@ -349,7 +357,7 @@ const resources = {
         addressUnknown: 'Address not listed',
         osmDetails: 'View source details',
         motorcycleNote:
-          'OpenStreetMap has no dedicated motorcycle profile here, so this link uses the car profile. Check road restrictions before travelling.',
+          'Motorcycle opens Google Maps in driving mode, and OpenStreetMap also uses its car profile. Check road restrictions before travelling.',
         category: {
           restaurant: 'Restaurant',
           cafe: 'Café',

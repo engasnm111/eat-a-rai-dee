@@ -2,12 +2,14 @@ import {
   lazy,
   Suspense,
   useCallback,
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
 } from 'react';
 import {
   ArrowRight,
+  LocateFixed,
   MapPin,
   Navigation,
   SlidersHorizontal,
@@ -68,9 +70,13 @@ export function DiscoveryPage() {
   const [draft, setDraft] = useState(discovery.criteria);
   const [picking, setPicking] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<Coordinates | null>(
+    null,
+  );
   const [spinRunning, setSpinRunning] = useState(false);
   const [spinPreview, setSpinPreview] = useState<string | null>(null);
   const locationAttemptRef = useRef(0);
+  const initialLocationRequestedRef = useRef(false);
   const spinAttemptRef = useRef(0);
   const [locationErrorKey, setLocationErrorKey] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -131,33 +137,48 @@ export function DiscoveryPage() {
     }
   };
 
-  const useMyLocation = () => {
-    if (!navigator.geolocation) {
-      setLocationErrorKey('search.locationUnavailable');
-      return;
-    }
+  const locateCurrentPosition = useCallback(
+    (setAsOrigin: boolean) => {
+      if (!navigator.geolocation) {
+        setLocationErrorKey('search.locationUnavailable');
+        setLocating(false);
+        return;
+      }
 
-    setLocating(true);
-    setLocationErrorKey(null);
-    const attempt = ++locationAttemptRef.current;
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        if (attempt !== locationAttemptRef.current) return;
-        updateOrigin(
-          { lat: position.coords.latitude, lon: position.coords.longitude },
-          'device',
-        );
-        setSelectedId(null);
-        setLocating(false);
-      },
-      () => {
-        if (attempt !== locationAttemptRef.current) return;
-        setLocationErrorKey('search.locationDenied');
-        setLocating(false);
-      },
-      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 60_000 },
-    );
-  };
+      setLocating(true);
+      setLocationErrorKey(null);
+      const attempt = ++locationAttemptRef.current;
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          if (attempt !== locationAttemptRef.current) return;
+          const point = {
+            lat: position.coords.latitude,
+            lon: position.coords.longitude,
+          };
+          setCurrentLocation(point);
+          if (setAsOrigin) {
+            updateOrigin(point, 'device');
+            setSelectedId(null);
+            setSpinPreview(null);
+          }
+          setLocating(false);
+        },
+        () => {
+          if (attempt !== locationAttemptRef.current) return;
+          setLocationErrorKey('search.locationDenied');
+          setLocating(false);
+        },
+        { enableHighAccuracy: false, timeout: 10_000, maximumAge: 60_000 },
+      );
+    },
+    [updateOrigin],
+  );
+
+  useEffect(() => {
+    if (initialLocationRequestedRef.current) return;
+    initialLocationRequestedRef.current = true;
+    locateCurrentPosition(true);
+  }, [locateCurrentPosition]);
 
   const pickOnMap = useCallback(
     (point: Coordinates) => {
@@ -262,6 +283,7 @@ export function DiscoveryPage() {
             >
               <MapCanvas
                 origin={discovery.origin}
+                currentLocation={currentLocation}
                 radiusMeters={discovery.criteria.radiusMeters}
                 restaurants={
                   discovery.status === 'success'
@@ -278,6 +300,19 @@ export function DiscoveryPage() {
               <Navigation size={16} aria-hidden="true" />
               {t('map.title')}
             </div>
+            {!picking && (
+              <button
+                type="button"
+                className="map-shell__locate"
+                onClick={() => locateCurrentPosition(false)}
+                disabled={locating}
+                aria-label={t('map.locate')}
+                title={t('map.locate')}
+              >
+                <LocateFixed size={16} aria-hidden="true" />
+                <span>{locating ? t('map.locating') : t('map.locate')}</span>
+              </button>
+            )}
             {picking && (
               <div className="pick-banner" role="status">
                 <MapPin size={20} aria-hidden="true" />
@@ -358,10 +393,9 @@ export function DiscoveryPage() {
           onChange={setDraft}
           onSearch={submitSearch}
           onClose={() => {
-            stopLocating();
             setDialogOpen(false);
           }}
-          onUseLocation={useMyLocation}
+          onUseLocation={() => locateCurrentPosition(true)}
           onPickOnMap={() => {
             stopLocating();
             setDialogOpen(false);
