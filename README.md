@@ -1,6 +1,6 @@
 # eat a rai dee
 
-A bilingual lunch finder built with React and TypeScript. Pick a location, search nearby food on an OpenStreetMap map, keep member favorites and reviews with Supabase, and open directions in OpenStreetMap. This repository is also a small example of feature-based frontend architecture.
+A bilingual lunch finder built with React and TypeScript. Use your device location or pick a point, search nearby food on an OpenStreetMap map, keep member favorites and reviews with Supabase, and open directions in Google Maps with OpenStreetMap as a secondary option. This repository is also a small example of feature-based frontend architecture.
 
 ![eat a rai dee logo](public/logo.svg)
 
@@ -35,9 +35,9 @@ Open the URL printed by Vite, normally `http://127.0.0.1:5173/`. Restaurant sear
 ## Features
 
 - Search by restaurant name or dish; search and combine 23 food categories, including buffet, shabu/suki, and crispy pork.
-- Choose your device location, pick a point on the map, or start from the sample point in central Bangkok. Set a 300 m to 10 km radius.
+- On first load, request the device location and use it as the default search origin when permission is granted. The map also keeps a current-location marker/control; users can still pick another search point or fall back to the sample point in central Bangkok. Set a 300 m to 10 km radius.
 - Filter by opening hours, vegetarian options, wheelchair access, takeaway, and delivery when source tags support them.
-- Explore results by straight-line distance, select map pins, and open OpenStreetMap directions for car, bicycle, or walking travel. Motorcycle currently uses the public car-routing profile because the public router does not expose a dedicated motorcycle profile.
+- Explore results by straight-line distance and select map pins. Google Maps is the primary directions action, with OpenStreetMap available as a secondary route. Motorcycle falls back to driving/car routing in both providers, so road restrictions should be checked before travel.
 - See aggregate ratings from reviews written by members of this site. Places without member reviews remain unrated; the app does not substitute Google ratings.
 - Signed-in members can save favorites, add/update/delete their review, and view their free-spin history. Row Level Security keeps member-owned records scoped to their Supabase user.
 - Use Free spin as a guest or member. It ranks up to 10 candidates by member rating and then straight-line distance, then chooses uniformly at random from that candidate set; member results are saved to spin history.
@@ -93,7 +93,7 @@ Open the URL printed by Vite, normally `http://127.0.0.1:5173/`. Restaurant sear
 │   │   │   ├── quick-filter-catalog.ts    # Food category definitions
 │   │   │   ├── filter-restaurants.ts      # Distance and filter rules
 │   │   │   ├── filter-restaurants.test.ts # Filtering tests
-│   │   │   ├── place-details.ts           # Addresses and OSM links
+│   │   │   ├── place-details.ts           # Addresses and external routing links
 │   │   │   └── place-details.test.ts      # Address and routing tests
 │   │   └── components/                    # Search, results, selected place, and map UI
 │   └── lib/
@@ -115,7 +115,7 @@ The website includes a Supabase browser client, member-data features, and a Goog
 
 ## Data and limitations
 
-Map tiles and place data come from OpenStreetMap and the public Overpass API. Category matches use names and available tags; a restaurant may be missing or lack dish-level information. Filters requiring a specific tag exclude places where it is unknown. Rating values shown by the app come only from reviews submitted through this site; places with no member reviews remain unrated. Search radius and result distances are measured in a straight line, not along roads. OpenStreetMap routing is opened externally; motorcycle currently falls back to the car profile, so users should verify road restrictions before travelling. Wider searches can take longer or fail when the public Overpass service is busy.
+Map tiles and place data come from OpenStreetMap and the public Overpass API. Category matches use names and available tags; a restaurant may be missing or lack dish-level information. Filters requiring a specific tag exclude places where it is unknown. Rating values shown by the app come only from reviews submitted through this site; places with no member reviews remain unrated. Search radius and result distances are measured in a straight line, not along roads. Directions open externally in Google Maps by default, with OpenStreetMap as a secondary option. Motorcycle currently falls back to driving/car routing in both providers, so users should verify road restrictions before travelling. Wider searches can take longer or fail when the public Overpass service is busy.
 
 The app sends the selected search point and radius to Overpass only when a search starts. It stores language choice and the Supabase Auth session in the browser; it does not store the user's search-location history. Favorites, reviews, and saved free-spin results store restaurant snapshot data such as name, address, and restaurant coordinates in Supabase. Public map and search services have no availability guarantee and are not designed for large-scale traffic. Review the [OSM tile policy](https://operations.osmfoundation.org/policies/tiles/) and [Overpass usage guidance](https://dev.overpass-api.de/overpass-doc/en/preface/commons.html) before wider deployment.
 

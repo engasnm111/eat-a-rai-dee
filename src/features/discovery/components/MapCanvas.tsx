@@ -7,6 +7,7 @@ import type { Coordinates, RestaurantWithDistance } from '../model/types';
 
 interface MapCanvasProps {
   origin: Coordinates;
+  currentLocation: Coordinates | null;
   radiusMeters: number;
   restaurants: RestaurantWithDistance[];
   selectedId: string | null;
@@ -35,6 +36,7 @@ function placeMarker(
 
 export function MapCanvas({
   origin,
+  currentLocation,
   radiusMeters,
   restaurants,
   selectedId,
@@ -47,6 +49,7 @@ export function MapCanvas({
   const mapRef = useRef<L.Map | null>(null);
   const circleRef = useRef<L.Circle | null>(null);
   const centerRef = useRef<L.CircleMarker | null>(null);
+  const currentLocationRef = useRef<L.CircleMarker | null>(null);
   const layerRef = useRef<L.LayerGroup | null>(null);
   const markersRef = useRef<Map<string, L.CircleMarker>>(new Map());
   const selectedMarkerRef = useRef<L.CircleMarker | null>(null);
@@ -108,6 +111,32 @@ export function MapCanvas({
       animate: true,
     });
   }, [origin, radiusMeters]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    currentLocationRef.current?.remove();
+    currentLocationRef.current = null;
+    if (!map || !currentLocation) return;
+
+    currentLocationRef.current = L.circleMarker(
+      [currentLocation.lat, currentLocation.lon],
+      {
+        radius: 8,
+        color: '#ffffff',
+        weight: 4,
+        fillColor: '#2563eb',
+        fillOpacity: 1,
+        interactive: false,
+      },
+    )
+      .bindTooltip(t('map.currentLocation'), {
+        direction: 'top',
+        offset: [0, -8],
+        permanent: true,
+      })
+      .addTo(map);
+    map.panTo([currentLocation.lat, currentLocation.lon], { animate: true });
+  }, [currentLocation, t]);
 
   useEffect(() => {
     const layer = layerRef.current;

@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { addressFor, directionsUrl } from './place-details';
+import {
+  addressFor,
+  directionsUrl,
+  googleMapsDirectionsUrl,
+} from './place-details';
 import type { Restaurant, TravelMode } from './types';
 
 describe('addressFor', () => {
@@ -29,6 +33,34 @@ describe('addressFor', () => {
         }),
       ),
     ).toBe('123 Test Road Pathum Wan Bangkok 10110');
+  });
+});
+
+describe('googleMapsDirectionsUrl', () => {
+  const destination = { lat: 13.75, lon: 100.54 };
+
+  it.each<[TravelMode, string]>([
+    ['driving', 'driving'],
+    ['two-wheeler', 'driving'],
+    ['bicycling', 'bicycling'],
+    ['walking', 'walking'],
+  ])('opens Google Maps navigation for %s', (mode, googleMode) => {
+    const url = new URL(
+      googleMapsDirectionsUrl(destination, mode, { lat: 13.7, lon: 100.5 }),
+    );
+
+    expect(url.origin).toBe('https://www.google.com');
+    expect(url.pathname).toBe('/maps/dir/');
+    expect(url.searchParams.get('api')).toBe('1');
+    expect(url.searchParams.get('origin')).toBe('13.7,100.5');
+    expect(url.searchParams.get('destination')).toBe('13.75,100.54');
+    expect(url.searchParams.get('travelmode')).toBe(googleMode);
+    expect(url.searchParams.get('dir_action')).toBe('navigate');
+  });
+
+  it('lets Google Maps use the current device location when origin is omitted', () => {
+    const url = new URL(googleMapsDirectionsUrl(destination, 'driving'));
+    expect(url.searchParams.has('origin')).toBe(false);
   });
 });
 

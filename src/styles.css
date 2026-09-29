@@ -721,6 +721,37 @@ a {
 .map-shell__label svg {
   color: var(--color-coral);
 }
+.map-shell__locate {
+  position: absolute;
+  z-index: 400;
+  top: 60px;
+  right: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  background: var(--color-white);
+  color: var(--color-ink);
+  box-shadow: 0 8px 25px rgb(40 25 48 / 11%);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.map-shell__locate:hover:not(:disabled) {
+  background: #fff7e9;
+}
+.map-shell__locate:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+.map-shell__locate svg {
+  color: var(--color-coral);
+  flex-shrink: 0;
+}
 .map-shell__pin-note {
   position: absolute;
   z-index: 400;
@@ -826,6 +857,23 @@ a {
 .selected-place__actions .primary-button {
   padding: 10px 13px;
   font-size: 11px;
+}
+.selected-place__actions .secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 12px;
+  border: 1px solid var(--color-ink);
+  border-radius: 11px;
+  background: var(--color-white);
+  color: var(--color-ink);
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.selected-place__actions .secondary-button:hover {
+  background: #fff7e9;
 }
 .source-link {
   display: inline-flex;

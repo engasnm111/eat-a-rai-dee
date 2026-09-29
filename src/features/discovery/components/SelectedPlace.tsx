@@ -10,6 +10,7 @@ import type {
 import {
   addressFor,
   directionsUrl,
+  googleMapsDirectionsUrl,
   openStreetMapUrl,
 } from '../model/place-details';
 import type {
@@ -99,12 +100,21 @@ export function SelectedPlace({
       <div className="selected-place__actions">
         <a
           className="primary-button"
-          href={directionsUrl(place.coordinate, travelMode, origin)}
+          href={googleMapsDirectionsUrl(place.coordinate, travelMode, origin)}
           target="_blank"
           rel="noopener noreferrer"
         >
           <Navigation size={17} aria-hidden="true" />
           {t('place.route', { mode: t(`search.travelMode.${travelMode}`) })}
+        </a>
+        <a
+          className="secondary-button"
+          href={directionsUrl(place.coordinate, travelMode, origin)}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Navigation size={15} aria-hidden="true" />
+          {t('place.osmRoute')}
         </a>
         <a
           className="source-link"
